@@ -42,11 +42,6 @@ export async function updateWithInsight(customerId, insight) {
     // Build updated profile data
     const profileData = profile.profile_data || {};
 
-    // Append to sentiment history (keep last 20)
-    const sentimentHistory = profileData.sentimentHistory || [];
-    sentimentHistory.push(insight.sentiment);
-    if (sentimentHistory.length > 20) sentimentHistory.shift();
-
     // Append to intent history (keep last 20)
     const intentHistory = profileData.intentHistory || [];
     intentHistory.push(insight.intent);
@@ -59,7 +54,6 @@ export async function updateWithInsight(customerId, insight) {
 
     const updatedProfileData = {
         ...profileData,
-        sentimentHistory,
         intentHistory,
         urgencyHistory,
         lastUpdated: new Date().toISOString()
@@ -70,15 +64,13 @@ export async function updateWithInsight(customerId, insight) {
         `UPDATE customer_profiles SET
             profile_data = $2,
             interaction_count = interaction_count + 1,
-            last_sentiment = $3,
-            last_intent = $4,
+            last_intent = $3,
             last_updated = CURRENT_TIMESTAMP
          WHERE customer_id = $1
          RETURNING *`,
         [
             customerId,
             JSON.stringify(updatedProfileData),
-            insight.sentiment,
             insight.intent
         ]
     );

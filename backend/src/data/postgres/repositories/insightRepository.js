@@ -13,15 +13,14 @@ export async function create(customerId, sessionId, messageId, insightData) {
     const result = await db.query(
         `INSERT INTO ai_insights (
             customer_id, session_id, message_id,
-            sentiment, intent, urgency, summary, suggestions, confidence
+            intent, urgency, summary, suggestions, confidence
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING *`,
         [
             customerId,
             sessionId,
             messageId,
-            insightData.sentiment,
             insightData.intent,
             insightData.urgency,
             insightData.summary || null,
@@ -32,8 +31,7 @@ export async function create(customerId, sessionId, messageId, insightData) {
 
     logger.debug('Insight created', {
         id: result.rows[0].id,
-        customerId,
-        sentiment: insightData.sentiment
+        customerId
     });
 
     return result.rows[0];
@@ -89,7 +87,6 @@ export async function getStats(customerId) {
         `SELECT 
             COUNT(*) as total_insights,
             COUNT(DISTINCT session_id) as sessions_with_insights,
-            mode() WITHIN GROUP (ORDER BY sentiment) as most_common_sentiment,
             mode() WITHIN GROUP (ORDER BY intent) as most_common_intent,
             mode() WITHIN GROUP (ORDER BY urgency) as most_common_urgency
          FROM ai_insights
@@ -113,7 +110,6 @@ export default {
     getBySession,
     getByCustomer,
     findLatestBySession,
-    getStats,
     getStats,
     count
 };

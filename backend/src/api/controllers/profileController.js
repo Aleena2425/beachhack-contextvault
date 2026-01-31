@@ -17,8 +17,49 @@ export async function getProfile(req, res) {
 
         // 1. Get Basic Customer Info
         const customer = await customerRepository.findByExternalId(uuid);
+
         if (!customer) {
-            return res.status(404).json({ error: 'Customer not found' });
+            logger.info('Customer not found, returning dummy profile', { uuid });
+
+            // Premium Demo Profile
+            if (uuid === 'PORSCHE-911-VIP') {
+                return res.json({
+                    uuid: 'PORSCHE-911-VIP',
+                    name: 'Alexander Sterling',
+                    email: 'a.sterling@private.com',
+                    budget_max: '150,000',
+                    product_interest: '1973 Porsche 911 Carrera RS',
+                    urgency: 'high',
+                    intent: 'purchase',
+                    ai_summary: 'Alexander is a seasoned collector of air-cooled Porsches. He is specifically looking for a matching-numbers 1973 Carrera RS. He has high technical knowledge and is ready to move quickly for the right quality.',
+                    suggestions: [
+                        'Provide documentation on engine stampings',
+                        'Offer an inspection via a certified Porsche specialist',
+                        'Discuss current auction trends for the 2.7 RS'
+                    ],
+                    last_active: new Date().toISOString(),
+                    status: 'online'
+                });
+            }
+
+            const isEmail = uuid.includes('@');
+            return res.json({
+                uuid: uuid,
+                name: isEmail ? uuid.split('@')[0] : `Demo Customer`,
+                email: isEmail ? uuid : `${uuid}@example.com`,
+                budget_max: '75,000',
+                product_interest: 'Classic Porsche 911',
+                urgency: 'high',
+                intent: 'purchase',
+                ai_summary: 'Customer is highly interested in a 1970s Porsche 911. They have a healthy budget and are looking to close a deal soon. System fallback data provided.',
+                suggestions: [
+                    'Offer a detailed condition report',
+                    'Schedule a private viewing this weekend',
+                    'Provide service history overview'
+                ],
+                last_active: new Date().toISOString(),
+                status: 'online'
+            });
         }
 
         // 2. Get Recent Session
@@ -33,18 +74,20 @@ export async function getProfile(req, res) {
 
         // 4. Construct Consolidated Profile
         const isEmail = uuid.includes('@');
+
+        // Prioritize AI context from latest insight
         const profile = {
             uuid: customer.external_id,
             name: customer.name || `Customer ${(customer.external_id || uuid).substring(0, 4)}`,
             email: customer.email || (isEmail ? uuid : `${uuid}@example.com`),
 
-            // Derived from Customer Metadata or default
-            budget_max: customer.metadata?.budget || 'Unknown',
-            product_interest: customer.metadata?.interest || 'General',
+            // Prioritize AI-derived metadata from the latest insight
+            // The pipeline stores these in a structured way now
+            budget_max: latestInsight?.metadata?.budget || latestInsight?.budget || customer.metadata?.budget || 'Unknown',
+            product_interest: latestInsight?.metadata?.interest || latestInsight?.interest || customer.metadata?.interest || 'General',
 
             // Derived from Latest Insight
             urgency: latestInsight?.urgency || 'low',
-            sentiment: latestInsight?.sentiment || 'neutral',
             intent: latestInsight?.intent || 'unknown',
 
             // The "AI Summary"

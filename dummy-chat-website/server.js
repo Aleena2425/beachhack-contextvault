@@ -63,6 +63,7 @@ app.post('/login', async (req, res) => {
         // Set cookie
         res.cookie('user', JSON.stringify({
             id: user.id,
+            uuid: user.uuid,
             email: user.email,
             name: user.name,
             role: user.role
@@ -72,6 +73,7 @@ app.post('/login', async (req, res) => {
             success: true,
             user: {
                 id: user.id,
+                uuid: user.uuid,
                 email: user.email,
                 name: user.name,
                 role: user.role
@@ -135,7 +137,7 @@ io.on('connection', (socket) => {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        customerUuid: socket.userData.email,
+                        customerUuid: socket.userData.uuid || socket.userData.email,
                         agentId: 'agent_001',
                         message: data.content,
                         sender: 'customer'

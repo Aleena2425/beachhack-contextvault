@@ -83,7 +83,6 @@ Latest customer message: ${message.content}
 
 Provide analysis as JSON with this exact structure:
 {
-  "sentiment": "positive|negative|neutral",
   "intent": "question|complaint|feedback|request|greeting|other",
   "urgency": "low|medium|high",
   "summary": "brief one-sentence summary of customer's need",
@@ -94,7 +93,7 @@ Be concise and actionable. Focus on helping the agent respond effectively.`;
 
         logger.debug('Calling Gemini API...', {
             customerId: customer.id,
-            historyLength: history.length
+            historyLength: conversationHistory.length
         });
 
         const startTime = Date.now();
@@ -126,7 +125,6 @@ Be concise and actionable. Focus on helping the agent respond effectively.`;
 
             // Fallback insights
             insights = {
-                sentiment: 'neutral',
                 intent: 'question',
                 urgency: 'medium',
                 summary: 'Customer needs assistance',
@@ -140,7 +138,6 @@ Be concise and actionable. Focus on helping the agent respond effectively.`;
 
         logger.debug('Insights parsed', {
             customerId: customer.id,
-            sentiment: insights.sentiment,
             intent: insights.intent,
             urgency: insights.urgency
         });
@@ -148,7 +145,6 @@ Be concise and actionable. Focus on helping the agent respond effectively.`;
         // Update message with AI metadata
         await messageRepository.updateAIMetadata(
             message.id,
-            insights.sentiment,
             insights.intent
         );
 
@@ -163,8 +159,20 @@ Be concise and actionable. Focus on helping the agent respond effectively.`;
         // Update customer profile incrementally
         await profileRepository.updateWithInsight(customer.id, insights);
 
-        // Emit to agents via Socket.io
-        agentSocket.emitInsights(customer.external_id, insights);
+        // Emit to agents via Socket.io with the format expected by AgentDash.jsx
+        // 1. Context Update (Budget, Interest, Summary)
+        agentSocket.emitContextUpdate(customer.external_id, {
+            summary: insights.summary,
+            budget: insights.budget || insights.budget_max || 'Unknown',
+            interest: insights.interest || insights.product_interest || 'General'
+        });
+
+        // 2. Next Best Actions (Suggestions, Intent, Urgency)
+        agentSocket.emitNextAction(customer.external_id, {
+            suggestions: insights.suggestions,
+            intent: insights.intent,
+            urgency: insights.urgency
+        });
 
         logger.info('AI Pipeline completed', {
             customerId: customer.id,

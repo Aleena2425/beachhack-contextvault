@@ -61,6 +61,40 @@ export function emitInsights(customerUuid, insights) {
 }
 
 /**
+ * Emit AI context update to agents (Budget, Interest, Summary)
+ * matches AgentDash.jsx listener for 'ai:context_update'
+ */
+export function emitContextUpdate(customerUuid, extractedContext) {
+    if (!agentNamespace) return;
+
+    agentNamespace.emit('ai:context_update', {
+        customerUuid,
+        extractedContext,
+        timestamp: new Date().toISOString()
+    });
+
+    logger.info('Context update emitted', { customerUuid });
+}
+
+/**
+ * Emit Next Best Actions to agents (Suggestions, Intent, Urgency)
+ * matches AgentDash.jsx listener for 'ai:next_best_action'
+ */
+export function emitNextAction(customerUuid, data) {
+    if (!agentNamespace) return;
+
+    agentNamespace.emit('ai:next_best_action', {
+        customerUuid,
+        suggestions: data.suggestions,
+        intent: data.intent,
+        urgency: data.urgency,
+        timestamp: new Date().toISOString()
+    });
+
+    logger.info('Next action emitted', { customerUuid });
+}
+
+/**
  * Emit profile update to agents (for future use)
  */
 export function emitProfileUpdate(customerUuid, profile) {
@@ -81,5 +115,7 @@ export function emitProfileUpdate(customerUuid, profile) {
 export default {
     initializeAgentSocket,
     emitInsights,
+    emitContextUpdate,
+    emitNextAction,
     emitProfileUpdate
 };

@@ -194,6 +194,26 @@ export const mockAllCustomers = [
         aiMemory: 'First-time buyer. Needs guidance on options. Educational approach recommended.',
         timeline: [],
     },
+    {
+        id: 'c8',
+        name: 'Alexander Sterling',
+        email: 'a.sterling@private.com',
+        uuid: 'PORSCHE-911-VIP',
+        assignedAgent: 'Sophie Chen',
+        agentId: 'a4',
+        budget: 150000,
+        productInterest: '1973 Porsche 911 Carrera RS',
+        intent: 'Purchase',
+        urgency: 'high',
+        lastUpdated: 'Just now',
+        keyFeatures: ['original condition', 'matching numbers', 'silver'],
+        aiMemory: 'Alexander is a seasoned collector focusing on air-cooled Porsches. He is looking for a rare 1973 Carrera RS in original condition. High-value prospect with immediate liquidity.',
+        timeline: [
+            { time: '10:00 AM', event: 'Viewed technical specifications', type: 'inbound' },
+            { time: '10:05 AM', event: 'Asked about engine provenance', type: 'inbound' },
+            { time: '10:10 AM', event: 'AI confirmed matching numbers', type: 'ai' },
+        ],
+    },
 ];
 
 export const mockKPIs = {

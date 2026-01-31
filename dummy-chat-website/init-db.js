@@ -44,11 +44,15 @@ async function initDatabase() {
 
         const appClient = await appPool.connect();
 
+        // Enable pgcrypto
+        await appClient.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto"');
+
         // Create users table
         console.log('Step 2: Creating users table...');
         await appClient.query(`
             CREATE TABLE users (
                 id SERIAL PRIMARY KEY,
+                uuid UUID DEFAULT gen_random_uuid(),
                 email VARCHAR(255) UNIQUE NOT NULL,
                 password_hash VARCHAR(255) NOT NULL,
                 name VARCHAR(255) NOT NULL,
@@ -65,9 +69,9 @@ async function initDatabase() {
         const agentPassword = await bcrypt.hash('agent123', 10);
 
         await appClient.query(`
-            INSERT INTO users (email, password_hash, name, role) VALUES
-            ('customer@example.com', $1, 'Demo Customer', 'customer'),
-            ('agent@example.com', $2, 'Demo Agent', 'agent')
+            INSERT INTO users (uuid, email, password_hash, name, role) VALUES
+            ('c0570b4c-1e24-4e31-9a7a-6f691680d2f1', 'customer@example.com', $1, 'Demo Customer', 'customer'),
+            (gen_random_uuid(), 'agent@example.com', $2, 'Demo Agent', 'agent')
         `, [customerPassword, agentPassword]);
 
         console.log('✅ Demo users created\n');

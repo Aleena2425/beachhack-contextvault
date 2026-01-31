@@ -29,13 +29,13 @@ export async function create(sessionId, senderType, content) {
 /**
  * Update message with AI metadata
  */
-export async function updateAIMetadata(id, sentiment, intent) {
+export async function updateAIMetadata(id, intent) {
     const result = await db.query(
         `UPDATE messages 
-         SET sentiment = $2, intent = $3
+         SET intent = $2
          WHERE id = $1
          RETURNING *`,
-        [id, sentiment, intent]
+        [id, intent]
     );
 
     return result.rows[0] || null;
