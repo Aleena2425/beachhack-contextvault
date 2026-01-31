@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE E-TYPE | Legend Reborn</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+</head>
+
+<body class="home-page">
+    <nav class="navbar">
+        <div class="logo">HERITAGE MOTORS</div>
+        <div class="nav-links">
+            <a href="#" class="active">E-TYPE</a>
+            <a href="#">HERITAGE</a>
+            <a href="#">CRAFT</a>
+            <button onclick="document.getElementById('loginModal').style.display='flex'" class="btn-minimal">SIGN
+                IN</button>
+        </div>
+    </nav>
+
+    <main class="hero">
+        <div class="hero-content">
+            <h2 class="pre-title">SPRING 2026 LAUNCH</h2>
+            <h1 class="hero-title">BEYOND <br> PERFORMANCE.</h1>
+            <p class="hero-subtitle">Experience the symphony of engineering and art. The most iconic classic, reimagined
+                for the modern collector.</p>
+
+            <div class="hero-actions">
+                <!-- Cal.com Book Button -->
+                <button class="btn-primary" data-cal-link="heritage-motors/test-drive" data-cal-namespace="test-drive"
+                    data-cal-config='{"layout":"month_view"}'>BOOK TEST DRIVE</button>
+                <button class="btn-outline" onclick="window.location.href='/chat.html'">GO TO CHAT</button>
+            </div>
+        </div>
+        <div class="hero-image-container">
+            <img src="assets/car-hero.png" alt="Classic Car Hero" class="hero-img">
+        </div>
+    </main>
+
+    <!-- Simple Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn"
+                onclick="document.getElementById('loginModal').style.display='none'">&times;</button>
+            <div class="login-header">
+                <h2>ACCESS PORTAL</h2>
+                <p>Sign in to your collector profile</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>EMAIL</label>
+                    <input type="email" id="email" required autocomplete="email" placeholder="example@collector.com">
+                </div>
+                <div class="form-group">
+                    <label>PASSWORD</label>
+                    <input type="password" id="password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-black">SIGN IN</button>
+                <div id="error" class="error-msg" style="display: none;"></div>
+            </form>
+            <div class="demo-hints">
+                <p onclick="fillCredentials('customer@example.com', 'customer123')">Login as Customer</p>
+                <p onclick="fillCredentials('agent@example.com', 'agent123')">Login as Agent</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cal element-click embed code -->
+    <script type="text/javascript">
+        (function (C, A, L) { let p = function (a, ar) { a.q.push(ar); }; let d = C.document; C.Cal = C.Cal || function () { let a = arguments; let ar = arguments; if (!C.Cal.q) { C.Cal.q = []; p(C.Cal, ar); } else { p(C.Cal, ar); } }; let l = "https://app.cal.com/embed/embed.js"; let s = d.createElement("script"); s.src = l; d.head.appendChild(s); let m = d.getElementsByTagName("script")[0]; m.parentNode.insertBefore(s, m); C.Cal("init", { origin: "https://app.cal.com" }); C.Cal("ui", { "styles": { "branding": { "brandColor": "#000000" } }, "hideEventTypeDetails": false, "layout": "month_view" }); })(window, "Cal");
+    </script>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const errorDiv = document.getElementById('error');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = '/chat.html';
+                } else {
+                    errorDiv.textContent = data.error || 'Login failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Server error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        });
+
+        function fillCredentials(email, password) {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = password;
+        }
+        window.fillCredentials = fillCredentials;
+    </script>
+</body>
+
+</html>

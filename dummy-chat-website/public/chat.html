@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONCIERGE | Heritage Motors</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+</head>
+
+<body class="chat-page">
+    <nav class="navbar" style="position: relative; background: transparent; padding: 20px 40px;">
+        <div class="logo">HERITAGE MOTORS</div>
+        <div class="nav-links">
+            <span id="userStatus" style="font-size: 0.7rem; letter-spacing: 2px;">
+                CONNECTED: <span id="userName" style="font-weight: 700;">...</span>
+            </span>
+            <button onclick="logout()" class="btn-minimal">EXIT CONCIERGE</button>
+        </div>
+    </nav>
+
+    <div class="chat-container">
+        <div class="messages" id="messages">
+            <div class="system-message">INITIALIZING SECURE SESSION...</div>
+        </div>
+
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="INQUIRE ABOUT THE COLLECTION..." autocomplete="off">
+            <button id="sendBtn">SEND INQUIRY</button>
+        </div>
+    </div>
+
+    <div class="info-panel">
+        <h3>CONCIERGE STATUS</h3>
+        <p id="contextaiStatus">SYNCING WITH HERITAGE DATABASE...</p>
+        <p style="margin-top: 10px; opacity: 0.5;">ROLE: <span id="userRole"
+                style="text-transform: uppercase;">...</span></p>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket;
+        let contextSocket;
+        let currentUser = null;
+
+        async function checkAuth() {
+            try {
+                const response = await fetch('/me');
+                if (!response.ok) {
+                    window.location.href = '/';
+                    return;
+                }
+                currentUser = await response.json();
+                document.getElementById('userName').textContent = currentUser.name.toUpperCase();
+                document.getElementById('userRole').textContent = currentUser.role;
+
+                initSocket();
+                initContextAI();
+            } catch (error) {
+                window.location.href = '/';
+            }
+        }
+
+        function initSocket() {
+            socket = io();
+            socket.on('connect', () => {
+                socket.emit('authenticate', currentUser);
+                addSystemMessage("ENCRYPTED CONNECTION ESTABLISHED");
+            });
+
+            socket.on('chat_message', (message) => {
+                displayMessage(message);
+            });
+
+            socket.on('user_online', (user) => {
+                if (user.email !== currentUser.email) {
+                    addSystemMessage(`${user.name.toUpperCase()} HAS JOINED THE CONCIERGE`);
+                }
+            });
+
+            socket.on('user_offline', (user) => {
+                addSystemMessage(`${user.name.toUpperCase()} HAS LEFT THE SESSION`);
+            });
+        }
+
+        function initContextAI() {
+            if (currentUser.role === 'agent') {
+                // Connect to ContextAI backend (port 5000)
+                contextSocket = io('http://localhost:5000/agent');
+
+                contextSocket.on('connect', () => {
+                    document.getElementById('contextaiStatus').textContent = '✅ ANALYTICS SYNCED';
+                });
+
+                contextSocket.on('ai:insights', (data) => {
+                    displayAIInsights(data);
+                });
+
+                contextSocket.on('disconnect', () => {
+                    document.getElementById('contextaiStatus').textContent = '⚠️ ANALYTICS OFFLINE';
+                });
+            } else {
+                document.getElementById('contextaiStatus').textContent = '👤 PERSONAL CONCIERGE';
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            if (!content) return;
+
+            const message = {
+                sender_name: currentUser.name,
+                sender_role: currentUser.role,
+                content: content
+            };
+
+            socket.emit('chat_message', message);
+            input.value = '';
+        }
+
+        function displayMessage(message) {
+            const messagesDiv = document.getElementById('messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${message.sender_role}`;
+
+            const time = new Date(message.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            messageEl.innerHTML = `
+                <div class="message-header">
+                    ${message.sender_role} // ${time}
+                </div>
+                <div class="message-content">${escapeHtml(message.content)}</div>
+            `;
+
+            messagesDiv.appendChild(messageEl);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function displayAIInsights(data) {
+            const messagesDiv = document.getElementById('messages');
+            const insightEl = document.createElement('div');
+            insightEl.style.cssText = 'background: rgba(255,255,255,0.03); padding: 25px; border: 1px dashed #444; margin: 30px 0;';
+            insightEl.innerHTML = `
+                <div style="font-size: 0.6rem; letter-spacing: 2px; color: #888; margin-bottom: 10px;">INTELLIGENCE REPORT // ${new Date().toLocaleTimeString()}</div>
+                <div style="font-family: monospace; font-size: 0.8rem; line-height: 1.6; color: #aaa;">${escapeHtml(data.insights)}</div>
+            `;
+            messagesDiv.appendChild(insightEl);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addSystemMessage(text) {
+            const messagesDiv = document.getElementById('messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = 'system-message';
+            messageEl.style.cssText = 'text-align: center; color: #444; font-size: 0.6rem; letter-spacing: 2px; margin: 20px 0;';
+            messageEl.textContent = text;
+            messagesDiv.appendChild(messageEl);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function logout() {
+            await fetch('/logout', { method: 'POST' });
+            window.location.href = '/';
+        }
+
+        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        checkAuth();
+    </script>
+</body>
+
+</html>

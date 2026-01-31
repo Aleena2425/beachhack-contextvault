@@ -1,0 +1,39 @@
+{
+  "name": "contextai-backend",
+  "version": "1.0.0",
+  "description": "ContextAI - Real-Time Contextual Sales Intelligence Service",
+  "main": "src/app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "simple": "node src/app-simple.js",
+    "setup-db": "node setup-database.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:e2e": "node tests/e2e-flow-simulation.js",
+    "test:socketio": "node tests/socketio-implementation-test.js",
+    "migrate": "node src/data/postgres/migrations/run.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "@langchain/community": "^0.3.16",
+    "@langchain/core": "^1.1.18",
+    "@langchain/google-genai": "^0.1.4",
+    "bcryptjs": "^3.0.3",
+    "chromadb": "^1.9.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.3",
+    "langchain": "^0.3.7",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.13.0",
+    "socket.io": "^4.8.0",
+    "socket.io-client": "^4.8.0",
+    "uuid": "^10.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

@@ -1,0 +1,19 @@
+{
+    "name": "dummy-chat-website",
+    "version": "1.0.0",
+    "description": "Dummy customer-agent chat website with role-based access",
+    "type": "module",
+    "scripts": {
+        "dev": "node server.js",
+        "init-db": "node init-db.js"
+    },
+    "dependencies": {
+        "express": "^4.18.2",
+        "pg": "^8.11.3",
+        "socket.io": "^4.6.1",
+        "socket.io-client": "^4.6.1",
+        "bcrypt": "^5.1.1",
+        "cookie-parser": "^1.4.6",
+        "dotenv": "^16.3.1"
+    }
+}
